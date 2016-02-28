@@ -7,10 +7,20 @@ link_directories("/nix/store/zj7wwm2fr632v7myx1wdf9kvw75g68r7-boost-1.58.0-lib/l
 
 add_definitions("-std=c++11" "-Wno-parentheses")
 
-add_executable(test_correctness
-    main.cpp
+add_library(common STATIC
+    test_utils.h
+    test_utils.cpp
     lexer.h
 )
 
-target_link_libraries(test_correctness boost_unit_test_framework boost_filesystem)
+add_executable(test_correctness
+    test_correctness_main.cpp
+)
 
+target_link_libraries(test_correctness common boost_unit_test_framework boost_filesystem)
+
+add_executable(test_performance
+    test_performance_main.cpp
+)
+
+target_link_libraries(test_performance common boost_unit_test_framework boost_filesystem)
