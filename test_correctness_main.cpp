@@ -46,6 +46,9 @@ std::string run_test(std::vector<char> const& input)
         case token_type::numeral:
             ss << "numeral";
             break;
+        case token_type::slash:
+            ss << "slash";
+            break;
         default:
             assert(false);
             ss << "<error>";

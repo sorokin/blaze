@@ -6,6 +6,7 @@ enum class token_type
     eof,
     identifier,
     numeral,
+    slash,
     unknown,
 };
 
@@ -83,6 +84,7 @@ struct lexer
 private:
     void fetch()
     {
+    again:
         tok_start = current;
         if (current == end)
         {
@@ -106,6 +108,57 @@ private:
             while (current != end && is_numeral_trail(*current))
                 ++current;
         }
+        else if (c == '/')
+        {
+            ++current;
+            if (current == end)
+            {
+                tok_type = token_type::slash;
+            }
+            else
+            {
+                c = *current;
+                if (c == '/')
+                {
+                    while (current != end && *current != '\n')
+                        ++current;
+
+                    if (current != end)
+                        ++current;
+                    goto again;
+                }
+                else if (c == '*')
+                {
+                    ++current;
+
+                    if (current != end)
+                        ++current;
+
+                    for (;;)
+                    {
+                        if (current == end)
+                        {
+                            report_error_unfinished_multiline_comment();
+                            break;
+                        }
+
+                        while (current != end && *current != '/')
+                            ++current;
+
+                        if (*(current - 1) == '*')
+                            break;
+                    }
+
+                    if (current != end)
+                        ++current;
+                    goto again;
+                }
+                else
+                {
+                    tok_type = token_type::slash;
+                }
+            }
+        }
         else
         {
             tok_type = token_type::unknown;
@@ -120,6 +173,11 @@ private:
     {
         while (current != end && is_whitespace(*current))
             ++current;
+    }
+
+    void report_error_unfinished_multiline_comment()
+    {
+
     }
 
 private:
