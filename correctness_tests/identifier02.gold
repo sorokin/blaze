@@ -1,4 +1,3 @@
 0:3	ident	abc
-3:4	ws	 
 4:7	ident	def
 7:7	eof	

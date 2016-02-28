@@ -40,9 +40,6 @@ std::string run_test(std::vector<char> const& input)
         case token_type::identifier:
             ss << "ident";
             break;
-        case token_type::whitespace:
-            ss << "ws";
-            break;
         case token_type::unknown:
             ss << "unknown";
             break;

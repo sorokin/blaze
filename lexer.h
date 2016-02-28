@@ -5,7 +5,6 @@ enum class token_type
 {
     eof,
     identifier,
-    whitespace,
     numeral,
     unknown,
 };
@@ -47,6 +46,7 @@ struct lexer
         , end(end)
         , current(start)
     {
+        skip_ws();
         fetch();
     }
 
@@ -72,7 +72,7 @@ struct lexer
 
     char const* token_end() const
     {
-        return current;
+        return tok_end;
     }
 
     void next()
@@ -87,6 +87,7 @@ private:
         if (current == end)
         {
             tok_type = token_type::eof;
+            tok_end = current;
             return;
         }
 
@@ -96,13 +97,6 @@ private:
             tok_type = token_type::identifier;
             ++current;
             while (current != end && is_identifier_trail(*current))
-                ++current;
-        }
-        else if (is_whitespace(c))
-        {
-            tok_type = token_type::whitespace;
-            ++current;
-            while (current != end && is_whitespace(*current))
                 ++current;
         }
         else if (is_numeral_start(c))
@@ -117,6 +111,15 @@ private:
             tok_type = token_type::unknown;
             ++current;
         }
+
+        tok_end = current;
+        skip_ws();
+    }
+
+    void skip_ws()
+    {
+        while (current != end && is_whitespace(*current))
+            ++current;
     }
 
 private:
@@ -125,6 +128,7 @@ private:
     char const* current;
     token_type tok_type;
     char const* tok_start;
+    char const* tok_end;
 };
 
 #endif // LEXER_H
