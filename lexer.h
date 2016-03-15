@@ -7,6 +7,10 @@ enum class token_type
     identifier,
     numeral,
     slash,
+    hash,
+    hashhash,
+    lpar,
+    rpar,
     unknown,
 };
 
@@ -46,6 +50,7 @@ struct lexer
         : start(start)
         , end(end)
         , current(start)
+        , newline(true)
     {
         skip_ws();
         fetch();
@@ -125,6 +130,7 @@ private:
 
                     if (current != end)
                         ++current;
+                    skip_ws();
                     goto again;
                 }
                 else if (c == '*')
@@ -151,6 +157,7 @@ private:
 
                     if (current != end)
                         ++current;
+                    skip_ws();
                     goto again;
                 }
                 else
@@ -159,6 +166,36 @@ private:
                 }
             }
         }
+        else if (c == '#')
+        {
+            ++current;
+            if (current != end && *current == '#')
+            {
+                tok_type = token_type::hashhash;
+                ++current;
+            }
+            else
+            {
+                if (newline)
+                    tok_type = token_type::hash;
+                else
+                {
+                    report_error_stray_hash();
+                    skip_ws();
+                    goto again;
+                }
+            }
+        }
+        else if (c == '(')
+        {
+            tok_type = token_type::lpar;
+            ++current;
+        }
+        else if (c == ')')
+        {
+            tok_type = token_type::rpar;
+            ++current;
+        }
         else
         {
             tok_type = token_type::unknown;
@@ -166,18 +203,36 @@ private:
         }
 
         tok_end = current;
+        newline = false;
         skip_ws();
     }
 
     void skip_ws()
     {
-        while (current != end && is_whitespace(*current))
+        for (;;)
+        {
+            if (current == end)
+                break;
+
+            char c = *current; 
+            if (!is_whitespace(c))
+                break;
+
+            if (c == '\n')
+                newline = true;
+
             ++current;
+        }
     }
 
     void report_error_unfinished_multiline_comment()
     {
 
+    }
+
+    void report_error_stray_hash()
+    {
+        
     }
 
 private:
@@ -187,6 +242,7 @@ private:
     token_type tok_type;
     char const* tok_start;
     char const* tok_end;
+    bool newline;
 };
 
 #endif // LEXER_H

@@ -1,0 +1,5 @@
+0:1	lpar	(
+1:2	ident	a
+2:3	rpar	)
+3:4	ident	b
+4:4	eof	

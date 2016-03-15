@@ -1,6 +1,7 @@
 #include "test_utils.h"
 
 #include <stdexcept>
+#include <iomanip>
 #include <boost/optional.hpp>
 
 namespace fs = boost::filesystem;
@@ -54,8 +55,7 @@ void write_string_screened(std::ostream& os, std::string const& str)
             os << c;
         else
         {
-            unsigned char uc = (unsigned char)c;
-            os << std::hex << "\\x" << uc;
+            os << "\\x" << std::hex << std::setw(2) << std::setfill('0') << (unsigned)(unsigned char)c;
         }
     }
 }
