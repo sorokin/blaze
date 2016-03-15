@@ -49,6 +49,18 @@ std::string run_test(std::vector<char> const& input)
         case token_type::slash:
             ss << "slash";
             break;
+        case token_type::hash:
+            ss << "hash";
+            break;
+        case token_type::hashhash:
+            ss << "hashhash";
+            break;
+        case token_type::lpar:
+            ss << "lpar";
+            break;
+        case token_type::rpar:
+            ss << "rpar";
+            break;
         default:
             assert(false);
             ss << "<error>";
