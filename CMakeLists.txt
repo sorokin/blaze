@@ -24,3 +24,9 @@ add_executable(test_performance
 )
 
 target_link_libraries(test_performance common boost_unit_test_framework boost_filesystem)
+
+add_executable(token_count
+    token_count_main.cpp
+)
+
+target_link_libraries(token_count common boost_filesystem)

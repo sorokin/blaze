@@ -33,6 +33,7 @@ void print_time(std::ostream& os, std::chrono::high_resolution_clock::duration d
 void run_test_on_file(fs::path const& filename)
 {
     std::vector<char> input = read_whole_file(filename);
+    input.push_back(guard_value);
 
     std::cout << filename << '\t' << input.size() << " bytes" << "\n\t";
 
@@ -44,7 +45,7 @@ void run_test_on_file(fs::path const& filename)
     {
         auto start_time = std::chrono::high_resolution_clock::now();
 
-        lexer lex(input.data(), input.data() + input.size());
+        lexer lex(input.data(), input.data() + input.size() - 1);
         while (lex.tt() != token_type::eof)
             lex.next();
 

@@ -26,47 +26,13 @@ std::string run_test(std::vector<char> const& input)
 {
     std::stringstream ss;
 
-    lexer lex(input.data(), input.data() + input.size());
+    lexer lex(input.data(), input.data() + input.size() - 1);
     for (;;)
     {
         ss << (lex.token_start() - lex.file_start()) << ':'
            << (lex.token_end() - lex.file_start()) << '\t';
         token_type tt = lex.tt();
-        switch (tt)
-        {
-        case token_type::eof:
-            ss << "eof";
-            break;
-        case token_type::identifier:
-            ss << "ident";
-            break;
-        case token_type::unknown:
-            ss << "unknown";
-            break;
-        case token_type::numeral:
-            ss << "numeral";
-            break;
-        case token_type::slash:
-            ss << "slash";
-            break;
-        case token_type::hash:
-            ss << "hash";
-            break;
-        case token_type::hashhash:
-            ss << "hashhash";
-            break;
-        case token_type::lpar:
-            ss << "lpar";
-            break;
-        case token_type::rpar:
-            ss << "rpar";
-            break;
-        default:
-            assert(false);
-            ss << "<error>";
-            break;
-        }
-        ss << '\t';
+        ss << tt << '\t';
         write_string_screened(ss, std::string(lex.token_start(), lex.token_end()));
         ss << '\n';
 
@@ -82,6 +48,7 @@ std::string run_test(std::vector<char> const& input)
 void run_test_on_file(fs::path const& filename)
 {
     std::vector<char> input = read_whole_file(filename);
+    input.push_back(guard_value);
     std::string output = run_test(input);
     std::vector<char> output_data{output.begin(), output.end()};
 
