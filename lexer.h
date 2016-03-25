@@ -3,6 +3,42 @@
 
 #include <cassert>
 #include <ostream>
+#include <unordered_map>
+#include "fnv.h"
+
+#define ALL_C_KEYWORDS  \
+    T(auto)             \
+    T(break)            \
+    T(case)             \
+    T(char)             \
+    T(const)            \
+    T(continue)         \
+    T(default)          \
+    T(do)               \
+    T(double)           \
+    T(else)             \
+    T(enum)             \
+    T(extern)           \
+    T(float)            \
+    T(for)              \
+    T(goto)             \
+    T(if)               \
+    T(int)              \
+    T(long)             \
+    T(register)         \
+    T(return)           \
+    T(short)            \
+    T(signed)           \
+    T(sizeof)           \
+    T(static)           \
+    T(struct)           \
+    T(switch)           \
+    T(typedef)          \
+    T(union)            \
+    T(unsigned)         \
+    T(void)             \
+    T(volatile)         \
+    T(while)
 
 enum class token_type
 {
@@ -62,6 +98,11 @@ enum class token_type
     ellipsis,
     circumflex,
     circumflex_eq,
+
+#define T(x) x##_keyword,
+    ALL_C_KEYWORDS
+#undef T
+
     unknown,
 
     token_type_max
@@ -128,6 +169,9 @@ std::ostream& operator<<(std::ostream& stream, token_type tt)
         TT(ellipsis);
         TT(circumflex);
         TT(circumflex_eq);
+#define T(x) TT(x##_keyword)
+        ALL_C_KEYWORDS
+#undef T
         TT(unknown);
 #undef TT
     default:
@@ -243,6 +287,24 @@ bool is_whitespace(char c)
     return c <= ' ';
 }
 
+#include "hashed.h"
+
+typedef std::unordered_map<hashed, token_type> identifier_map_t;
+
+inline identifier_map_t calc_identifier_map()
+{
+    identifier_map_t result
+    {
+#define T(x) {hashed::literal(#x), token_type::x##_keyword},
+        ALL_C_KEYWORDS
+#undef T
+    };
+
+    return result;
+}
+
+static identifier_map_t identifiers = calc_identifier_map();
+
 const char guard_value = '`';
 
 struct lexer
@@ -302,12 +364,23 @@ private:
         case 'A'...'Z':
         case '_':
             {
+                fnv::accumulator acc;
+                acc(c);
                 char const* curr = current;
                 ++curr;
                 while (is_identifier_trail(*curr))
+                {
+                    acc(*curr);
                     ++curr;
+                }
                 current = curr;
-                tok_type = token_type::ident;
+                identifier_hash = acc.get_value();
+
+                auto i = identifiers.find(hashed(tok_start, current, acc.get_value()));
+                if (i == identifiers.end())
+                    tok_type = token_type::ident;
+                else
+                    tok_type = i->second;
                 break;
             }
         case '0'...'9':
@@ -776,6 +849,13 @@ private:
     char const* tok_end;
     size_t line_number;
     bool newline;
+    union
+    {
+        struct
+        {
+            uint32_t identifier_hash;
+        };
+    };
 };
 
 #endif // LEXER_H

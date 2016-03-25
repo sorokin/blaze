@@ -11,6 +11,8 @@ add_library(common STATIC
     test_utils.h
     test_utils.cpp
     lexer.h
+    fnv.h
+    hashed.h
 )
 
 add_executable(test_correctness
