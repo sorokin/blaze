@@ -302,10 +302,12 @@ private:
         case 'A'...'Z':
         case '_':
             {
+                char const* curr = current;
+                ++curr;
+                while (is_identifier_trail(*curr))
+                    ++curr;
+                current = curr;
                 tok_type = token_type::ident;
-                ++current;
-                while (is_identifier_trail(*current))
-                    ++current;
                 break;
             }
         case '0'...'9':
