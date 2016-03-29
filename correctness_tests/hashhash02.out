@@ -1,0 +1,4 @@
+0:3	ident	abc
+3:5	hashhash	##
+5:10	ident	def\x0a\x0a
+a:a	eof	
