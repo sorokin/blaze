@@ -32,10 +32,10 @@ namespace std
     };
 }
 
-hashed::hashed()
+inline hashed::hashed()
 {}
 
-hashed::hashed(char const* start, char const* end, uint32_t hash)
+inline hashed::hashed(char const* start, char const* end, uint32_t hash)
     : start(start)
     , size(static_cast<uint32_t>(end - start))
     , hash(hash)
@@ -45,7 +45,7 @@ hashed::hashed(char const* start, char const* end, uint32_t hash)
     assert(bsize <= std::numeric_limits<uint32_t>::max());
 }
 
-hashed hashed::literal(char const* lit)
+inline hashed hashed::literal(char const* lit)
 {
     char const* p = lit;
     fnv::accumulator acc;
@@ -58,7 +58,7 @@ hashed hashed::literal(char const* lit)
     return hashed(lit, p, acc.get_value());
 }
 
-bool operator==(hashed a, hashed b)
+inline bool operator==(hashed a, hashed b)
 {
     if (a.hash != b.hash)
         return false;
@@ -69,7 +69,7 @@ bool operator==(hashed a, hashed b)
     return memcmp(a.start, b.start, a.size) == 0;
 }
 
-bool operator!=(hashed a, hashed b)
+inline bool operator!=(hashed a, hashed b)
 {
     if (a.hash != b.hash)
         return true;

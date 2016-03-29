@@ -70,3 +70,14 @@ void write_entire_file(fs::path const& filename, std::string const& data)
 
     fclose(f);
 }
+
+std::vector<char> random_vector(size_t size, std::mt19937& mersenne_engine)
+{
+    std::uniform_int_distribution<char> dist(std::numeric_limits<char>::min(), std::numeric_limits<char>::max());
+
+    auto gen = std::bind(dist, mersenne_engine);
+
+    std::vector<char> result(size);
+    std::generate(result.begin(), result.end(), gen);
+    return result;
+}

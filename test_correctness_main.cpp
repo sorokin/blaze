@@ -15,6 +15,7 @@
 #include <boost/optional.hpp>
 #include <boost/filesystem.hpp>
 
+#include "lex_file.h"
 #include "lexer.h"
 #include "test_utils.h"
 
@@ -26,21 +27,7 @@ std::string run_test(std::vector<char> const& input)
 {
     std::stringstream ss;
 
-    lexer lex(input.data(), input.data() + input.size() - 1);
-    for (;;)
-    {
-        ss << (lex.token_start() - lex.file_start()) << ':'
-           << (lex.token_end() - lex.file_start()) << '\t';
-        token_type tt = lex.tt();
-        ss << tt << '\t';
-        write_string_screened(ss, std::string(lex.token_start(), lex.token_end()));
-        ss << '\n';
-
-        if (tt == token_type::eof)
-            break;
-
-        lex.next();
-    }
+    lex_file(ss, input.data(), input.data() + input.size() - 1);
 
     return ss.str();
 }

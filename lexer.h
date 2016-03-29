@@ -7,7 +7,7 @@
 #include "fnv.h"
 #include "token_type.h"
 
-bool is_identifier_trail(char c)
+inline bool is_identifier_trail(char c)
 {
 #define IDENTIFIER_TRAIL_IMPLEMENTATION 3
 #if IDENTIFIER_TRAIL_IMPLEMENTATION == 0
@@ -89,12 +89,12 @@ bool is_identifier_trail(char c)
 #endif
 }
 
-bool is_numeral_trail(char c)
+inline bool is_numeral_trail(char c)
 {
     return is_identifier_trail(c);
 }
 
-bool is_whitespace(char c)
+inline bool is_whitespace(char c)
 {
     return c <= ' ';
 }
@@ -235,8 +235,16 @@ private:
                         while (current != end && *current != '/')
                             ++current;
 
+                        if (current == end)
+                        {
+                            report_error_unfinished_multiline_comment();
+                            break;
+                        }
+
                         if (*(current - 1) == '*')
                             break;
+                        else
+                            ++current;
                     }
 
                     if (current != end)
