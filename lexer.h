@@ -183,13 +183,6 @@ std::ostream& operator<<(std::ostream& stream, token_type tt)
     return stream;
 }
 
-bool is_identifier_start(char c)
-{
-    return c >= 'A' && c <= 'Z'
-        || c >= 'a' && c <= 'z'
-        || c == '_';
-}
-
 bool is_identifier_trail(char c)
 {
 #define IDENTIFIER_TRAIL_IMPLEMENTATION 3
@@ -270,11 +263,6 @@ bool is_identifier_trail(char c)
 #else
 #error "invalid value of IDENTIFIER_TRAIL_IMPLEMENTATION"
 #endif
-}
-
-bool is_numeral_start(char c)
-{
-    return c >= '0' && c <= '9';
 }
 
 bool is_numeral_trail(char c)
