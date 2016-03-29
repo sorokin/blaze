@@ -11,6 +11,9 @@ add_library(common STATIC
     test_utils.h
     test_utils.cpp
     lexer.h
+    keywords.h
+    token_type.h
+    token_type.cpp
     fnv.h
     hashed.h
 )
