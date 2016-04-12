@@ -79,7 +79,7 @@ bool init_function()
         if (i->path().extension() == ".txt")
         {
             boost::unit_test::framework::master_test_suite().
-                    add( boost::unit_test::make_test_case( boost::unit_test::callback0<>(boost::bind(&run_test_on_file, i->path())), "run_test_on_file(\"" + i->path().string() + "\")"));
+                    add( boost::unit_test::make_test_case( boost::bind(&run_test_on_file, i->path()), "run_test_on_file(\"" + i->path().string() + "\")", __FILE__, __LINE__));
 
         }
 
