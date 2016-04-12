@@ -126,11 +126,9 @@ struct lexer
         , end(end)
         , current(start)
         , line_number(0)
-        , newline(true)
     {
         assert(*end == guard_value);
-        skip_ws();
-        fetch();
+        fetch(true);
     }
 
     token_type tt() const
@@ -155,18 +153,19 @@ struct lexer
 
     char const* token_end() const
     {
-        return tok_end;
+        return current;
     }
 
     void next()
     {
-        fetch();
+        fetch(false);
     }
 
 private:
-    void fetch() __attribute__((noinline))
+    void fetch(bool newline) __attribute__((noinline))
     {
-    again:
+    again_with_ws:
+        skip_ws(newline);
         tok_start = current;
 
         char c = *current;
@@ -176,23 +175,23 @@ private:
         case 'A'...'Z':
         case '_':
             {
-                fnv::accumulator acc;
-                acc(c);
+                //fnv::accumulator acc;
+                //acc(c);
                 char const* curr = current;
                 ++curr;
                 while (is_identifier_trail(*curr))
                 {
-                    acc(*curr);
+                    //acc(*curr);
                     ++curr;
                 }
                 current = curr;
-                identifier_hash = acc.get_value();
+                //identifier_hash = acc.get_value();
 
-                auto i = identifiers.find(hashed(tok_start, current, acc.get_value()));
-                if (i == identifiers.end())
+                //auto i = identifiers.find(hashed(tok_start, current, acc.get_value()));
+                //if (i == identifiers.end())
                     tok_type = token_type::ident;
-                else
-                    tok_type = i->second;
+                //else
+                //    tok_type = i->second;
                 break;
             }
         case '0'...'9':
@@ -214,8 +213,7 @@ private:
 
                     if (current != end)
                         ++current;
-                    skip_ws();
-                    goto again;
+                    goto again_with_ws;
                 }
                 else if (c == '*')
                 {
@@ -249,8 +247,7 @@ private:
 
                     if (current != end)
                         ++current;
-                    skip_ws();
-                    goto again;
+                    goto again_with_ws;
                 }
                 else if (c == '=')
                 {
@@ -278,8 +275,7 @@ private:
                     else
                     {
                         report_error_stray_hash();
-                        skip_ws();
-                        goto again;
+                        goto again_with_ws;
                     }
                 }
                 break;
@@ -417,7 +413,7 @@ private:
                 if (current == end)
                 {
                     tok_type = token_type::eof;
-                    tok_end = current;
+                    //tok_end = current;
                     return;
                 }
                 else
@@ -622,27 +618,30 @@ private:
             }
         }
 
-        tok_end = current;
-        newline = false;
-        skip_ws();
+        //tok_end = current;
     }
 
-    void skip_ws()
+    void skip_ws(bool newline)
     {
+        char const* curr = current;
+        char c = *current;
+        if (!is_whitespace(c))
+            return;
+
         for (;;)
         {
-            char c = *current; 
-            if (!is_whitespace(c))
-                return;
-
             if (c == '\n')
             {
                 newline = true;
                 ++line_number;
             }
 
-            ++current;
+            ++curr;
+            c = *curr;
+            if (!is_whitespace(c))
+                break;
         }
+        current = curr;
     }
 
     void report_error_unfinished_multiline_comment()
@@ -666,9 +665,8 @@ private:
     char const* current;
     token_type tok_type;
     char const* tok_start;
-    char const* tok_end;
+    //char const* tok_end;
     size_t line_number;
-    bool newline;
     union
     {
         struct

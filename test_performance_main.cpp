@@ -40,7 +40,7 @@ void run_test_on_file(fs::path const& filename)
     boost::optional<std::chrono::high_resolution_clock::duration> min, max;
     std::chrono::high_resolution_clock::duration sum{};
 
-    size_t const N = 10;
+    size_t const N = 1000;
     for (size_t i = 0; i != N; ++i)
     {
         auto start_time = std::chrono::high_resolution_clock::now();
