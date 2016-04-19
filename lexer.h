@@ -119,26 +119,27 @@ static identifier_map_t identifiers = calc_identifier_map();
 
 const char guard_value = '`';
 
+struct token
+{
+    token_type tok_type;
+    char const* tok_start;
+    union
+    {
+        struct
+        {
+            uint32_t identifier_hash;
+        };
+    };
+};
+
 struct lexer
 {
     lexer(char const* start, char const* end)
-        : start(start)
-        , end(end)
+        : end(end)
         , current(start)
         , line_number(0)
     {
         assert(*end == guard_value);
-        fetch(true);
-    }
-
-    token_type tt() const
-    {
-        return tok_type;
-    }
-
-    char const* file_start() const
-    {
-        return start;
     }
 
     char const* file_end() const
@@ -146,27 +147,17 @@ struct lexer
         return end;
     }
 
-    char const* token_start() const
-    {
-        return tok_start;
-    }
-
     char const* token_end() const
     {
         return current;
     }
 
-    void next()
+    token fetch(bool newline) __attribute__((noinline))
     {
-        fetch(false);
-    }
-
-private:
-    void fetch(bool newline) __attribute__((noinline))
-    {
+        token tok;
     again_with_ws:
         skip_ws(newline);
-        tok_start = current;
+        tok.tok_start = current;
 
         char c = *current;
         switch (c)
@@ -189,14 +180,14 @@ private:
 
                 //auto i = identifiers.find(hashed(tok_start, current, acc.get_value()));
                 //if (i == identifiers.end())
-                    tok_type = token_type::ident;
+                    tok.tok_type = token_type::ident;
                 //else
-                //    tok_type = i->second;
+                    //tok.tok_type = i->second;
                 break;
             }
         case '0'...'9':
             {
-                tok_type = token_type::numeral;
+                tok.tok_type = token_type::numeral;
                 ++current;
                 while (/*current != end && */is_numeral_trail(*current))
                     ++current;
@@ -251,12 +242,12 @@ private:
                 }
                 else if (c == '=')
                 {
-                    tok_type = token_type::slash_eq;
+                    tok.tok_type = token_type::slash_eq;
                     ++current;
                 }
                 else
                 {
-                    tok_type = token_type::slash;
+                    tok.tok_type = token_type::slash;
                 }
                 break;
             }
@@ -265,13 +256,13 @@ private:
                 ++current;
                 if (/*current != end && */*current == '#')
                 {
-                    tok_type = token_type::hashhash;
+                    tok.tok_type = token_type::hashhash;
                     ++current;
                 }
                 else
                 {
                     if (newline)
-                        tok_type = token_type::hash;
+                        tok.tok_type = token_type::hash;
                     else
                     {
                         report_error_stray_hash();
@@ -282,43 +273,43 @@ private:
             }
         case '(':
             {
-                tok_type = token_type::lpar;
+                tok.tok_type = token_type::lpar;
                 ++current;
                 break;
             }
         case ')':
             {
-                tok_type = token_type::rpar;
+                tok.tok_type = token_type::rpar;
                 ++current;
                 break;
             }
         case ',':
             {
-                tok_type = token_type::comma;
+                tok.tok_type = token_type::comma;
                 ++current;
                 break;
             }
         case '[':
             {
-                tok_type = token_type::lbracket;
+                tok.tok_type = token_type::lbracket;
                 ++current;
                 break;
             }
         case ']':
             {
-                tok_type = token_type::rbracket;
+                tok.tok_type = token_type::rbracket;
                 ++current;
                 break;
             }
         case '{':
             {
-                tok_type = token_type::lbrace;
+                tok.tok_type = token_type::lbrace;
                 ++current;
                 break;
             }
         case '}':
             {
-                tok_type = token_type::rbrace;
+                tok.tok_type = token_type::rbrace;
                 ++current;
                 break;
             }
@@ -326,10 +317,10 @@ private:
             {
                 ++current;
                 if (*current != '=')
-                    tok_type = token_type::eq;
+                    tok.tok_type = token_type::eq;
                 else
                 {
-                    tok_type = token_type::eq_eq;
+                    tok.tok_type = token_type::eq_eq;
                 }
                 break;
             }
@@ -339,16 +330,16 @@ private:
                 c = *current;
                 if (c == '+')
                 {
-                    tok_type = token_type::plus_plus;
+                    tok.tok_type = token_type::plus_plus;
                     ++current;
                 }
                 else if (c == '=')
                 {
-                    tok_type = token_type::plus_eq;
+                    tok.tok_type = token_type::plus_eq;
                     ++current;
                 }
                 else
-                    tok_type = token_type::plus;
+                    tok.tok_type = token_type::plus;
                 break;
             }
         case '-':
@@ -357,28 +348,28 @@ private:
                 c = *current;
                 if (c == '-')
                 {
-                    tok_type = token_type::minus_minus;
+                    tok.tok_type = token_type::minus_minus;
                     ++current;
                 }
                 else if (c == '=')
                 {
-                    tok_type = token_type::minus_eq;
+                    tok.tok_type = token_type::minus_eq;
                     ++current;
                 }
                 else if (c == '>')
                 {
                     ++current;
                     if (*current != '*')
-                        tok_type = token_type::minus_greater;
+                        tok.tok_type = token_type::minus_greater;
                     else
                     {
-                        tok_type = token_type::minus_greater_star;
+                        tok.tok_type = token_type::minus_greater_star;
                         ++current;
                     }
                 }
                 else
                 {
-                    tok_type = token_type::minus;
+                    tok.tok_type = token_type::minus;
                 }
                 break;
             }
@@ -387,10 +378,10 @@ private:
                 ++current;
                 c = *current;
                 if (c != '=')
-                    tok_type = token_type::star;
+                    tok.tok_type = token_type::star;
                 else
                 {
-                    tok_type = token_type::star_eq;
+                    tok.tok_type = token_type::star_eq;
                     ++current;
                 }
                 break;
@@ -400,10 +391,10 @@ private:
                 ++current;
                 c = *current;
                 if (c != '=')
-                    tok_type = token_type::excl;
+                    tok.tok_type = token_type::excl;
                 else
                 {
-                    tok_type = token_type::excl_eq;
+                    tok.tok_type = token_type::excl_eq;
                     ++current;
                 }
                 break;
@@ -412,13 +403,13 @@ private:
             {
                 if (current == end)
                 {
-                    tok_type = token_type::eof;
+                    tok.tok_type = token_type::eof;
                     //tok_end = current;
-                    return;
+                    return tok;
                 }
                 else
                 {
-                    tok_type = token_type::unknown;
+                    tok.tok_type = token_type::unknown;
                     ++current;
                     break;
                 }
@@ -429,16 +420,16 @@ private:
                 c = *current;
                 if (c == '&')
                 {
-                    tok_type = token_type::amp_amp;
+                    tok.tok_type = token_type::amp_amp;
                     ++current;
                 }
                 else if (c == '=')
                 {
-                    tok_type = token_type::amp_eq;
+                    tok.tok_type = token_type::amp_eq;
                     ++current;
                 }
                 else
-                    tok_type = token_type::amp;
+                    tok.tok_type = token_type::amp;
                 break;
             }
         case '|':
@@ -447,22 +438,22 @@ private:
                 c = *current;
                 if (c == '|')
                 {
-                    tok_type = token_type::pipe_pipe;
+                    tok.tok_type = token_type::pipe_pipe;
                     ++current;
                 }
                 else if (c == '=')
                 {
-                    tok_type = token_type::pipe_eq;
+                    tok.tok_type = token_type::pipe_eq;
                     ++current;
                 }
                 else
-                    tok_type = token_type::pipe;
+                    tok.tok_type = token_type::pipe;
                 break;
             }
         case '~':
             {
                 ++current;
-                tok_type = token_type::tilde;
+                tok.tok_type = token_type::tilde;
                 break;
             }
         case '%':
@@ -470,10 +461,10 @@ private:
                 ++current;
                 c = *current;
                 if (c != '=')
-                    tok_type = token_type::percent;
+                    tok.tok_type = token_type::percent;
                 else
                 {
-                    tok_type = token_type::percent_eq;
+                    tok.tok_type = token_type::percent_eq;
                     ++current;
                 }
                 break;
@@ -481,7 +472,7 @@ private:
         case '?':
             {
                 ++current;
-                tok_type = token_type::question;
+                tok.tok_type = token_type::question;
                 break;
             }
         case '<':
@@ -492,20 +483,20 @@ private:
                 {
                     ++current;
                     if (*current != '=')
-                        tok_type = token_type::less_less;
+                        tok.tok_type = token_type::less_less;
                     else
                     {
-                        tok_type = token_type::less_less_eq;
+                        tok.tok_type = token_type::less_less_eq;
                         ++current;
                     }
                 }
                 else if (c == '=')
                 {
-                    tok_type = token_type::less_eq;
+                    tok.tok_type = token_type::less_eq;
                     ++current;
                 }
                 else
-                    tok_type = token_type::less;
+                    tok.tok_type = token_type::less;
                 break;
             }
         case '>':
@@ -516,20 +507,20 @@ private:
                 {
                     ++current;
                     if (*current != '=')
-                        tok_type = token_type::greater_greater;
+                        tok.tok_type = token_type::greater_greater;
                     else
                     {
-                        tok_type = token_type::greater_greater_eq;
+                        tok.tok_type = token_type::greater_greater_eq;
                         ++current;
                     }
                 }
                 else if (c == '=')
                 {
-                    tok_type = token_type::greater_eq;
+                    tok.tok_type = token_type::greater_eq;
                     ++current;
                 }
                 else
-                    tok_type = token_type::greater;
+                    tok.tok_type = token_type::greater;
                 break;
             }
         case ':':
@@ -538,16 +529,16 @@ private:
                 if (*current == ':')
                 {
                     ++current;
-                    tok_type = token_type::colon_colon;
+                    tok.tok_type = token_type::colon_colon;
                 }
                 else
-                    tok_type = token_type::colon;
+                    tok.tok_type = token_type::colon;
                 break;
             }
         case ';':
             {
                 ++current;
-                tok_type = token_type::semicolon;
+                tok.tok_type = token_type::semicolon;
                 break;
             }
         case '.':
@@ -556,17 +547,17 @@ private:
                 c = *current;
                 if (c == '*')
                 {
-                    tok_type = token_type::dot_star;
+                    tok.tok_type = token_type::dot_star;
                     ++current;
                 }
                 else if (c == '.' && *(current + 1) == '.')
                 {
-                    tok_type = token_type::ellipsis;
+                    tok.tok_type = token_type::ellipsis;
                     current += 2;
                 }
                 else
                 {
-                    tok_type = token_type::dot;
+                    tok.tok_type = token_type::dot;
                 }
                 break;
             }
@@ -574,10 +565,10 @@ private:
             {
                 ++current;
                 if (*current != '=')
-                    tok_type = token_type::circumflex;
+                    tok.tok_type = token_type::circumflex;
                 else
                 {
-                    tok_type = token_type::circumflex_eq;
+                    tok.tok_type = token_type::circumflex_eq;
                     ++current;
                 }
                 break;
@@ -593,7 +584,7 @@ private:
                 else
                     report_unfinished_literal();
 
-                tok_type = token_type::char_literal;
+                tok.tok_type = token_type::char_literal;
                 break;
             }
         case '"':
@@ -607,17 +598,18 @@ private:
                 else
                     report_unfinished_literal();
 
-                tok_type = token_type::string_literal;
+                tok.tok_type = token_type::string_literal;
                 break;
             }
         default:
             {
-                tok_type = token_type::unknown;
+                tok.tok_type = token_type::unknown;
                 ++current;
                 break;
             }
         }
 
+        return tok;
         //tok_end = current;
     }
 
@@ -663,17 +655,7 @@ private:
     char const* start;
     char const* end;
     char const* current;
-    token_type tok_type;
-    char const* tok_start;
-    //char const* tok_end;
     size_t line_number;
-    union
-    {
-        struct
-        {
-            uint32_t identifier_hash;
-        };
-    };
 };
 
 #endif // LEXER_H

@@ -48,12 +48,13 @@ int main()
         input.push_back(guard_value);
 
         lexer lex(input.data(), input.data() + input.size() - 1);
+        token tok = lex.fetch(true);
         for (;;)
         {
-            if (lex.tt() == token_type::eof)
+            if (tok.tok_type == token_type::eof)
                 break;
 
-            lex.next();
+            tok = lex.fetch(false);
         }
 
         ++i;

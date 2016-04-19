@@ -19,16 +19,17 @@ int main(int argc, char* argv[])
 
     std::vector<size_t> counts((size_t)token_type::token_type_max);
     lexer lex(text.data(), text.data() + text.size() - 1);
+    token tok = lex.fetch(true);
     size_t tokens_total = 0;
     for (;;)
     {
-        token_type tt = lex.tt();
+        token_type tt = tok.tok_type;
         ++counts[(size_t)tt];
         ++tokens_total;
         if (tt == token_type::eof)
             break;
 
-        lex.next();
+        tok = lex.fetch(false);
     }
 
     std::cout << tokens_total << " tokens\t" << (double)text_size / tokens_total << " bytes/token\n";

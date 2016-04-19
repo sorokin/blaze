@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.3)
 
 project(blaze)
 
-add_definitions("-std=c++11" "-Wno-parentheses")
+add_definitions("-std=c++14" "-Wno-parentheses")
 
 add_library(common STATIC
     test_utils.h
@@ -13,6 +13,12 @@ add_library(common STATIC
     token_type.cpp
     fnv.h
     hashed.h
+    preprocessor.h
+    preprocessor.cpp
+    source_manager.h
+    source_manager.cpp
+    translation_unit.h
+    translation_unit.cpp
 )
 
 add_library(lex_file STATIC
@@ -49,3 +55,9 @@ add_executable(fuzz_lexer
 )
 
 target_link_libraries(fuzz_lexer common boost_filesystem)
+
+add_executable(pp
+    pp_main.cpp
+)
+
+target_link_libraries(pp common boost_filesystem)
